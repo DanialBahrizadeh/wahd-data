@@ -7,7 +7,7 @@ const timeToFloat = (time: string) => {
 };
 
 // map the persion day to numbers so they are easier to work with
-const dayMap = {
+const dayMap: any = {
   شنبه: 0,
   يكشنبه: 1,
   دوشنبه: 2,
@@ -36,12 +36,14 @@ export const placeParser = (placeAndTime: string) =>
     .split("،")[0] // schedules are seperated via persion comma
     .split("مکان:")[1];
 
-export const sexParser = (sex: string) => {
-  const sexMap = {
-    زن: 0,
-    مرد: 1,
-    مختلط: 2,
+export const sexParser = (sex: string) : number => {
+  
+  const sexMap: any = {
+    "زن": 0,
+    "مرد": 1,
+    "مختلط": 2,
   };
+
   return sexMap[sex];
 };
 
