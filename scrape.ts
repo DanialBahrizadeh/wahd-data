@@ -41,7 +41,7 @@ await page.goto("https://golestan.kntu.ac.ir/forms/authenticateuser/main.htm", {
 });
 
 // click on sso to auth
-console.log(page.frames().map((f) => f.name()));
+// console.log(page.frames().map((f) => f.name()));
 
 // NOTE: golestan add frames on top each other so i have to always chose the last one
 let formBody = page
@@ -53,7 +53,6 @@ await formBody?.waitForSelector("#tdmsrt a", { visible: true });
 await formBody?.click("#tdmsrt a");
 
 // wait and then enter the data
-
 page.waitForSelector("#username", { visible: true });
 await page.type("#username", process.env.USERNAME || "faild");
 await page.type("#password", process.env.USERNAME || "faild");
@@ -110,7 +109,7 @@ let commander = page
 await commander?.waitForSelector("#IM16_ViewRep", { visible: true });
 await commander?.click("#IM16_ViewRep");
 
-// NOTE: golestand open a new page when clicking open a new browser
+// NOTE: golestand open a new page when clicking "show as a table"
 let newPage: Page | null = null;
 
 const newTargetPromise = new Promise((resolve) => {
