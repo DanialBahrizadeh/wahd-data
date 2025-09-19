@@ -21,6 +21,7 @@
   "dependencies": {
     "@types/node": "^24.4.0",
     "dotenv": "^17.2.2",
+    "persian-date": "^1.1.0",
     "puppeteer": "^24.20.0"
   }
 }
