@@ -17,7 +17,7 @@ export type Row = {
   teacher: string;
   place: string;
   classTime: Schedule[];
-  examDate: string;
+  examDate: number; // unix timeStamps
   limits: string;
   chosenSimister: string;
   moreInfo: string;
