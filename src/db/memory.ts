@@ -1,4 +1,4 @@
-import MemoryStore from "../models/store";
+import MemoryStore from "../types/store";
 
 class Memory implements MemoryStore {
   public name: string = "memory";

@@ -1,5 +1,5 @@
 import persianDate from "persian-date";
-import type { Schedule, Sex } from "../models/lesson";
+import type { Schedule, Sex } from "../types/lesson";
 
 // map the the time to querters so they are easir to work with
 const timeToFloat = (time: string) => {

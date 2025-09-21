@@ -5,7 +5,7 @@ import {
   scheduleParser,
   sexParser,
 } from "./utils/parsers";
-import type { Row } from "./models/lesson";
+import type { Row } from "./types/lesson";
 import { writeFile } from "fs/promises";
 import { env } from "./config/env";
 

@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from "redis";
-import MemoryStore from "../models/store";
+import MemoryStore from "../types/store";
 import { env } from "../config/env";
 
 class Redis implements MemoryStore {

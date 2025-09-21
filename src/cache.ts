@@ -1,4 +1,4 @@
-import MemoryStore from "./models/store";
+import MemoryStore from "./types/store";
 
 export async function getCache(
   store: MemoryStore,
