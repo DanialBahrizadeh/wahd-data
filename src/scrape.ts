@@ -1,5 +1,10 @@
 import puppeteer, { Page } from "puppeteer";
-import { placeParser, scheduleParser, sexParser } from "./utils/parsers";
+import {
+  examDateParser,
+  placeParser,
+  scheduleParser,
+  sexParser,
+} from "./utils/parsers";
 import type { Row } from "./models/lesson";
 import { writeFile } from "fs/promises";
 import { env } from "./config/env";
@@ -143,7 +148,6 @@ export default async function scrape(collegeId: string, term: string = "4041") {
       9: "signin",
       10: "waitingList",
       12: "teacher",
-      14: "examInfo",
       15: "limits",
       16: "chosenSimister",
       20: "moreInfo",
@@ -170,6 +174,12 @@ export default async function scrape(collegeId: string, term: string = "4041") {
         if (colIndex === 13) {
           row["classTime"] = scheduleParser(cell.textContent!);
           row["place"] = placeParser(cell.textContent!);
+          return;
+        }
+
+        if (colIndex === 14) {
+          row["examDate"] = examDateParser(cell.textContent!);
+          return;
         }
 
         //@ts-ignore
