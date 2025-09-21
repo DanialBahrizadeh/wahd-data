@@ -4,10 +4,14 @@ import scrape from "./scrape";
 import { getCache, setCache } from "./cache";
 import redisStore from "./db/redis";
 import type { ClassesQuery } from "./models/api";
+import fastifyCors from "@fastify/cors";
 
 dotenv.config({ override: true });
 
 const server = fastify();
+
+// TODO: add options for the cors before deploy
+(async () => await server.register(fastifyCors))();
 
 server.get<{ Querystring: ClassesQuery }>(
   "/classes",

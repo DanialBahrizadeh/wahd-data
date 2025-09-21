@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/DanialBahrizadeh/wahd-data#readme",
   "dependencies": {
+    "@fastify/cors": "^11.1.0",
     "dotenv": "^17.2.2",
     "fastify": "^5.6.0",
     "persian-date": "^1.1.0",
