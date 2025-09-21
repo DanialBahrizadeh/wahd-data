@@ -1,30 +1,10 @@
 import dotenv from "dotenv";
 import { writeFile } from "fs/promises";
 import puppeteer, { Page } from "puppeteer";
+import type { Row } from "./models/lesson";
 
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
 // row type
-type Row = {
-  id: string;
-  collegeId: string;
-  collegeName: string;
-  lessonGruopId: string;
-  lessonGruopName: string;
-  lessonId: string;
-  lessonName: string;
-  credits: string;
-  actionCredits: string;
-  cap: string;
-  signin: string;
-  waitingList: string;
-  sex: string;
-  teacher: string;
-  placeAndTime: string;
-  examInfo: string;
-  limits: string;
-  chosenSimister: string;
-  moreInfo: string;
-};
 
 // start the broser
 
@@ -159,9 +139,7 @@ export default async function scrape(collegeId: string, term : string = "4041") 
       8: "cap",
       9: "signin",
       10: "waitingList",
-      11: "sex",
       12: "teacher",
-      13: "placeAndTime",
       14: "examInfo",
       15: "limits",
       16: "chosenSimister",
