@@ -1,16 +1,17 @@
 import puppeteer, { Page } from "puppeteer";
 import { placeParser, scheduleParser, sexParser } from "./utils/parsers";
 import type { Row } from "./models/lesson";
+import { writeFile } from "fs/promises";
+import { env } from "./config/env";
 
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
 // row type
 
 // start the broser
 
-
 export default async function scrape(collegeId: string, term: string = "4041") {
   const browser = await puppeteer.launch({
-    headless: process.env.DEBUG_MODE == "true" ? false : true,
+    headless: env.DEBUG_MODE ? false : true,
   });
 
   const page = await browser.newPage();
@@ -36,8 +37,8 @@ export default async function scrape(collegeId: string, term: string = "4041") {
 
   // wait and then enter the data
   page.waitForSelector("#username", { visible: true });
-  await page.type("#username", process.env.USERNAME || "faild");
-  await page.type("#password", process.env.USERNAME || "faild");
+  await page.type("#username", env.USERNAME);
+  await page.type("#password", env.PASSWORD);
 
   await page.click("#kc-login");
 
@@ -180,8 +181,8 @@ export default async function scrape(collegeId: string, term: string = "4041") {
     return rows;
   }, term);
 
-  // Don't write the data for now
-  // await writeFile("data.json", JSON.stringify(tableData));
+  // write the data only in DEBUG_MODE
+  if (env.DEBUG_MODE) await writeFile("data.json", JSON.stringify(tableData));
 
   await newPage!.close();
   await page.close();

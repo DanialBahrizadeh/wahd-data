@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import MemoryStore from "./store";
+import { env } from "../config/env";
 
 class Redis implements MemoryStore {
 
@@ -43,6 +44,7 @@ class Redis implements MemoryStore {
 }
 
 const redisStore = new Redis(process.env.REDIS_URL!);
+const redisStore = new Redis(env.REDIS_URL);
 
 (async () => {
     await redisStore.connect();
