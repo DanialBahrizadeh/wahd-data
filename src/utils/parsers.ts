@@ -1,4 +1,5 @@
 import persianDate from "persian-date";
+import type { Schedule, Sex } from "../models/lesson";
 
 // map the the time to querters so they are easir to work with
 const timeToFloat = (time: string) => {
@@ -17,7 +18,7 @@ const dayMap: any = {
   جمعه: 6,
 };
 
-export const scheduleParser = (placeAndTime: string) =>
+export const scheduleParser = (placeAndTime: string): Schedule[] =>
   placeAndTime
     .replaceAll("درس(ت):", "")
     .split("،") // schedules are seperated via persion comma
@@ -36,12 +37,11 @@ export const placeParser = (placeAndTime: string) =>
     .split("،")[0] // schedules are seperated via persion comma
     .split("مکان:")[1];
 
-export const sexParser = (sex: string) : number => {
-  
+export const sexParser = (sex: string): Sex => {
   const sexMap: any = {
-    "زن": 0,
-    "مرد": 1,
-    "مختلط": 2,
+    زن: 0,
+    مرد: 1,
+    مختلط: 2,
   };
 
   return sexMap[sex];

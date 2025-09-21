@@ -1,6 +1,5 @@
-import dotenv from "dotenv";
-import { writeFile } from "fs/promises";
 import puppeteer, { Page } from "puppeteer";
+import { placeParser, scheduleParser, sexParser } from "./utils/parsers";
 import type { Row } from "./models/lesson";
 
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
@@ -8,17 +7,20 @@ import type { Row } from "./models/lesson";
 
 // start the broser
 
-export default async function scrape(collegeId: string, term : string = "4041") {
 
+export default async function scrape(collegeId: string, term: string = "4041") {
   const browser = await puppeteer.launch({
     headless: process.env.DEBUG_MODE == "true" ? false : true,
   });
 
   const page = await browser.newPage();
 
-  await page.goto("https://golestan.kntu.ac.ir/forms/authenticateuser/main.htm", {
-    waitUntil: "networkidle0",
-  });
+  await page.goto(
+    "https://golestan.kntu.ac.ir/forms/authenticateuser/main.htm",
+    {
+      waitUntil: "networkidle0",
+    },
+  );
 
   // click on sso to auth
   // console.log(page.frames().map((f) => f.name()));
@@ -159,13 +161,18 @@ export default async function scrape(collegeId: string, term : string = "4041") 
         // skip unimportant cols
         if ([17, 18, 19].includes(colIndex)) return;
 
-        // those have nested element inside
-        if (colIndex === 6 || colIndex === 7) {
-          row[idxToHeader[colIndex]] = cell.querySelector("nobr")!.textContent;
+        if (colIndex === 11) {
+          row["sex"] = sexParser(cell.textContent!);
           return;
         }
 
-        row[idxToHeader[colIndex]] = cell.textContent;
+        if (colIndex === 13) {
+          row["classTime"] = scheduleParser(cell.textContent!);
+          row["place"] = placeParser(cell.textContent!);
+        }
+
+        //@ts-ignore
+        row[idxToHeader[colIndex]] = cell.textContent!.trim();
       });
       rows.push(row);
     });
@@ -180,6 +187,5 @@ export default async function scrape(collegeId: string, term : string = "4041") 
   await page.close();
   await browser.close();
 
-  return tableData
-
+  return tableData;
 }
