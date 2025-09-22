@@ -1,12 +1,9 @@
 import fastify from "fastify";
-import dotenv from "dotenv";
 import scrape from "./scrape";
 import { getCache, setCache } from "./cache";
 import redisStore from "./db/redis";
 import type { ClassesQuery } from "./types/api";
 import fastifyCors from "@fastify/cors";
-
-dotenv.config({ override: true });
 
 const server = fastify();
 
