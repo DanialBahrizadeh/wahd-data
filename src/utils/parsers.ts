@@ -1,5 +1,5 @@
 import persianDate from "persian-date";
-import type { Schedule, Sex } from "../types/lesson";
+import type { Row, Schedule, Sex, UnParsedRow } from "../types/lesson";
 
 // map the the time to querters so they are easir to work with
 const timeToFloat = (time: string) => {
@@ -18,8 +18,9 @@ const dayMap: any = {
   جمعه: 6,
 };
 
-export const scheduleParser = (placeAndTime: string): Schedule[] =>
-  placeAndTime
+const scheduleParser = (placeAndTime: string): Schedule[] => {
+  if (!placeAndTime) return [];
+  return placeAndTime
     .replaceAll("درس(ت):", "")
     .split("،") // schedules are seperated via persion comma
     .map((schedule) => schedule.split("مکان:")[0]) // take the things before the place which are time
@@ -30,14 +31,17 @@ export const scheduleParser = (placeAndTime: string): Schedule[] =>
 
       return { day, start, end };
     });
+};
 
-export const placeParser = (placeAndTime: string) =>
-  placeAndTime
+const placeParser = (placeAndTime: string) => {
+  if (!placeAndTime) return "";
+  return placeAndTime
     .replaceAll("درس(ت):", "")
     .split("،")[0] // schedules are seperated via persion comma
     .split("مکان:")[1];
+};
 
-export const sexParser = (sex: string): Sex => {
+const sexParser = (sex: string): Sex => {
   const sexMap: any = {
     زن: 0,
     مرد: 1,
@@ -47,7 +51,8 @@ export const sexParser = (sex: string): Sex => {
   return sexMap[sex];
 };
 
-export const examDateParser = (examDate: string) => {
+const examDateParser = (examDate: string) => {
+  if (!examDate) return 0;
   const [dates, hours] = examDate.split("ساعت:");
   const [year, month, day] = dates
     .replace("تاريخ:", "")
@@ -58,3 +63,11 @@ export const examDateParser = (examDate: string) => {
 
   return new persianDate([year, month, day, hour, minute]).valueOf(); // save the date unix timestamps
 };
+
+export const parseRow = (unParsedRow: UnParsedRow): Row => ({
+  ...unParsedRow,
+  sex: sexParser(unParsedRow["sex"]),
+  examDate: examDateParser(unParsedRow["examDate"]),
+  place: placeParser(unParsedRow["placeAndTime"]),
+  classTime: scheduleParser(unParsedRow["placeAndTime"]),
+});

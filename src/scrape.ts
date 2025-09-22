@@ -1,13 +1,8 @@
 import puppeteer, { Page } from "puppeteer";
-import {
-  examDateParser,
-  placeParser,
-  scheduleParser,
-  sexParser,
-} from "./utils/parsers";
-import type { Row } from "./types/lesson";
+import type { Row, UnParsedRow } from "./types/lesson";
 import { writeFile } from "fs/promises";
 import { env } from "./config/env";
+import { parseRow } from "./utils/parsers";
 
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
 // row type
@@ -129,13 +124,13 @@ export default async function scrape(collegeId: string, term: string = "4041") {
   await newPage!.waitForSelector("table", { visible: true });
 
   // itarate over the table
-  const tableData = await newPage!.evaluate((term) => {
-    const rows: Row[] = [];
+  const UnParsedTableData = await newPage!.evaluate((term) => {
+    const rows: UnParsedRow[] = [];
     const tbody = document.querySelector("tbody");
     const trElements = tbody!.querySelectorAll("tr");
 
     // the header of each column
-    const idxToHeader: Record<number, keyof Row> = {
+    const idxToHeader: Record<number, keyof UnParsedRow> = {
       0: "collegeId",
       1: "collegeName",
       2: "lessonGruopId",
@@ -147,7 +142,10 @@ export default async function scrape(collegeId: string, term: string = "4041") {
       8: "cap",
       9: "signin",
       10: "waitingList",
+      11: "sex",
       12: "teacher",
+      13: "placeAndTime",
+      14: "examDate",
       15: "limits",
       16: "chosenSimister",
       20: "moreInfo",
@@ -158,7 +156,9 @@ export default async function scrape(collegeId: string, term: string = "4041") {
       if (rowIndex === 0) return;
 
       // NOTE: the the 4th col of each row is the lessonId thus making the term + row a unique id
-      const row: Row = { id: term + tr.children[4].textContent } as Row;
+      const row: UnParsedRow = {
+        id: term + tr.children[4].textContent,
+      } as UnParsedRow;
 
       const cells = tr.querySelectorAll("td");
 
@@ -166,24 +166,8 @@ export default async function scrape(collegeId: string, term: string = "4041") {
         // skip unimportant cols
         if ([17, 18, 19].includes(colIndex)) return;
 
-        if (colIndex === 11) {
-          row["sex"] = sexParser(cell.textContent!);
-          return;
-        }
-
-        if (colIndex === 13) {
-          row["classTime"] = scheduleParser(cell.textContent!);
-          row["place"] = placeParser(cell.textContent!);
-          return;
-        }
-
-        if (colIndex === 14) {
-          row["examDate"] = examDateParser(cell.textContent!);
-          return;
-        }
-
         //@ts-ignore
-        row[idxToHeader[colIndex]] = cell.textContent!.trim();
+        row[idxToHeader[colIndex]] = cell.textContent?.trim() || "";
       });
       rows.push(row);
     });
@@ -191,6 +175,7 @@ export default async function scrape(collegeId: string, term: string = "4041") {
     return rows;
   }, term);
 
+  const tableData = UnParsedTableData.map(parseRow);
   // write the data only in DEBUG_MODE
   if (env.DEBUG_MODE) await writeFile("data.json", JSON.stringify(tableData));
 
