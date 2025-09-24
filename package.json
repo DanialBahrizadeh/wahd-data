@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node build.js",
     "start": "node dist/index.js",
+    "dev": "nodemon --watch src --exec \"npm run build && npm run start\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,6 +22,7 @@
   "homepage": "https://github.com/DanialBahrizadeh/wahd-data#readme",
   "dependencies": {
     "@fastify/cors": "^11.1.0",
+    "@fastify/formbody": "^8.0.2",
     "dotenv": "^17.2.2",
     "fastify": "^5.6.0",
     "persian-date": "^1.1.0",
@@ -31,6 +33,7 @@
     "@types/node": "^24.5.2",
     "@types/redis": "^4.0.10",
     "esbuild": "^0.25.10",
+    "nodemon": "^3.1.10",
     "typescript": "^5.9.2"
   }
 }
