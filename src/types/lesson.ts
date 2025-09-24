@@ -1,19 +1,19 @@
 export type Sex = 0 | 1 | 2;
 export type Schedule = { day: number; start: number; end: number };
-export type Row = {
+export type Lesson = {
   id: string;
-  collegeId: string;
-  collegeName: string;
-  lessonGruopId: string;
-  lessonGruopName: string;
+  // collegeId: string;
+  // collegeName: string;
+  // lessonGruopId: string;
+  // lessonGruopName: string;
   lessonId: string;
   lessonName: string;
   credits: string;
   actionCredits: string;
   cap: string;
   signin: string;
-  waitingList: string;
-  sex: Sex;
+  // waitingList: string;
+  // sex: Sex;
   teacher: string;
   place: string;
   classTime: Schedule[];
@@ -25,20 +25,21 @@ export type Row = {
 
 export type UnParsedRow = {
   id: string;
-  collegeId: string;
-  collegeName: string;
-  lessonGruopId: string;
-  lessonGruopName: string;
+  // collegeId: string;
+  // collegeName: string;
+  // lessonGruopId: string;
+  // lessonGruopName: string;
   lessonId: string;
   lessonName: string;
   credits: string;
   actionCredits: string;
   cap: string;
   signin: string;
-  waitingList: string;
-  sex: string;
+  // waitingList: string;
+  // sex: string;
   teacher: string;
-  placeAndTime: string;
+  place: string;
+  classTime: string;
   examDate: string;
   limits: string;
   chosenSimister: string;

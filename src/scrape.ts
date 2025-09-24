@@ -1,5 +1,5 @@
 import puppeteer, { Page } from "puppeteer";
-import type { Row, UnParsedRow } from "./types/lesson";
+import type { UnParsedRow } from "./types/lesson";
 import { writeFile } from "fs/promises";
 import { env } from "./config/env";
 import { parseRow } from "./utils/parsers";
@@ -131,20 +131,19 @@ export default async function scrape(collegeId: string, term: string = "4041") {
 
     // the header of each column
     const idxToHeader: Record<number, keyof UnParsedRow> = {
-      0: "collegeId",
-      1: "collegeName",
-      2: "lessonGruopId",
-      3: "lessonGruopName",
+      // 0: "collegeId",
+      // 1: "collegeName",
+      // 2: "lessonGruopId",
+      // 3: "lessonGruopName",
       4: "lessonId",
       5: "lessonName",
       6: "credits",
       7: "actionCredits",
       8: "cap",
       9: "signin",
-      10: "waitingList",
-      11: "sex",
+      // 10: "waitingList",
+      // 11: "sex",
       12: "teacher",
-      13: "placeAndTime",
       14: "examDate",
       15: "limits",
       16: "chosenSimister",
@@ -163,8 +162,15 @@ export default async function scrape(collegeId: string, term: string = "4041") {
       const cells = tr.querySelectorAll("td");
 
       cells.forEach((cell, colIndex) => {
-        // skip unimportant cols
-        if ([17, 18, 19].includes(colIndex)) return;
+        // NOTE: the 14th cell is placeAndTime
+        if (colIndex === 13) {
+          row["place"] = cell.textContent?.trim() || "";
+          row["classTime"] = cell.textContent?.trim() || "";
+        }
+
+        if (!Object.keys(idxToHeader).map(Number).includes(colIndex)) {
+          return;
+        }
 
         //@ts-ignore
         row[idxToHeader[colIndex]] = cell.textContent?.trim() || "";

@@ -1,5 +1,5 @@
 import persianDate from "persian-date";
-import type { Row, Schedule, Sex, UnParsedRow } from "../types/lesson";
+import type { Lesson, Schedule, Sex, UnParsedRow } from "../types/lesson";
 
 // map the the time to querters so they are easir to work with
 const timeToFloat = (time: string) => {
@@ -64,10 +64,10 @@ const examDateParser = (examDate: string) => {
   return new persianDate([year, month, day, hour, minute]).valueOf(); // save the date unix timestamps
 };
 
-export const parseRow = (unParsedRow: UnParsedRow): Row => ({
+export const parseRow = (unParsedRow: UnParsedRow): Lesson => ({
   ...unParsedRow,
-  sex: sexParser(unParsedRow["sex"]),
+  // sex: sexParser(unParsedRow["sex"]),
   examDate: examDateParser(unParsedRow["examDate"]),
-  place: placeParser(unParsedRow["placeAndTime"]),
-  classTime: scheduleParser(unParsedRow["placeAndTime"]),
+  place: placeParser(unParsedRow["place"]),
+  classTime: scheduleParser(unParsedRow["classTime"]),
 });
