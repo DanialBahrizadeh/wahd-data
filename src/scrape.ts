@@ -9,7 +9,7 @@ import faculties from "./utils/faculties";
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
 // row type
 
-// start the broser
+// start the browser
 
 export default async function scrape(term: string = "4041") {
 
