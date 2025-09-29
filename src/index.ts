@@ -33,7 +33,7 @@ server.get<{ Querystring: ClassesQuery }>(
       return {error: "gender is required", code: "bad_query"};
     }
 
-    const cache = await getCache(memoryStore, gender == 0 ? `man-${collegeId}` : `woman-${collegeId}`);
+    const cache = await getCache(redisStore, gender == 0 ? `man-${collegeId}` : `woman-${collegeId}`);
 
     if (cache) {
       reply.header("content-type", "application/json");
