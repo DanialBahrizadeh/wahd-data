@@ -19,14 +19,21 @@ server.register(formbody);
 server.get<{ Querystring: ClassesQuery }>(
   "/classes",
   async (request, reply) => {
+
     const collegeId = request.query.collegeId;
+    const gender = request.query.gender;
 
     if (!collegeId) {
       reply.status(400);
       return { error: "collegeId is required", code: "bad_query"};
     }
 
-    const cache = await getCache(memoryStore, collegeId);
+    if(!gender) {
+      reply.status(400);
+      return {error: "gender is required", code: "bad_query"};
+    }
+
+    const cache = await getCache(memoryStore, gender == 0 ? `man-${collegeId}` : `woman-${collegeId}`);
 
     if (cache) {
       reply.header("content-type", "application/json");
@@ -67,11 +74,17 @@ server.post<{ Headers: BuildHeader}>(
       return {error: "not authorized to access this resource", code: "unauthorized"}
     }
 
-    const data = await scrape();
+    let data = await scrape(env.USERNAME, env.PASSWORD);
 
     // TODO multithread this code and use memorystore for job report
     for(const [facultyId, lessons] of Object.entries(data)) {
-      await setCache(memoryStore, facultyId, JSON.stringify(lessons));
+      await setCache(redisStore, 'man-' + facultyId, JSON.stringify(lessons));
+    };
+
+    data = await scrape(env.USERNAME_GIRL, env.PASSWORD_GIRL, [55, 42]);
+
+    for(const [facultyId, lessons] of Object.entries(data)) {
+      await setCache(redisStore, 'woman-' + facultyId, JSON.stringify(lessons));
     };
 
     return {

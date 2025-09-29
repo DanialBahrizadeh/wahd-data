@@ -11,7 +11,11 @@ import faculties from "./utils/faculties";
 
 // start the browser
 
-export default async function scrape(term: string = "4041") {
+export default async function scrape(username: string,
+    
+    password: string,
+    filter: number[] = [],
+    term: string = "4041") {
 
     const browser = await puppeteer.launch({
         headless: env.DEBUG_MODE ? false : true,
@@ -19,6 +23,12 @@ export default async function scrape(term: string = "4041") {
 
     const page = await browser.newPage();
 
+    await page.setUserAgent(
+      "Mozilla/5.0 (X11; Linux x86_64) " +
+      "AppleWebKit/537.36 (KHTML, like Gecko) " +
+      "Chrome/128.0.0.0 Safari/537.36"
+    );
+    
     await page.goto(
         "https://golestan.kntu.ac.ir/forms/authenticateuser/main.htm", {
             waitUntil: "networkidle0",
@@ -37,14 +47,16 @@ export default async function scrape(term: string = "4041") {
     await formBody?.waitForSelector("#tdmsrt a", {
         visible: true
     });
+
     await formBody?.click("#tdmsrt a");
 
     // wait and then enter the data
-    page.waitForSelector("#username", {
+    await page.waitForSelector("#username", {
         visible: true
     });
-    await page.type("#username", env.USERNAME);
-    await page.type("#password", env.PASSWORD);
+
+    await page.type("#username", username);
+    await page.type("#password", password);
 
     await page.click("#kc-login");
 
@@ -83,7 +95,6 @@ export default async function scrape(term: string = "4041") {
 
     let f3 = page.frames().find((f) => f.name() === "Faci3");
 
-
     while (!f3) {
         await new Promise(() => setTimeout(() => {}, 1000));
         f3 = page.frames().find((f) => f.name() === "Faci3");
@@ -100,6 +111,10 @@ export default async function scrape(term: string = "4041") {
     let results: Partial<Record<keys, Lesson[]>> = {};
 
     for (const collegeId of faculties) {
+
+        if(filter.length > 0 && !filter.includes(collegeId)) {
+            continue
+        }
 
         await formBody!.waitForSelector("#GF078012_0", {
             visible: true
