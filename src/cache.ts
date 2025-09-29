@@ -13,9 +13,7 @@ export async function setCache(
   value: string,
 ): Promise<boolean> {
   // I know this doesn't work for all store
-  await store.set(`cache-${collegeId}`, value, {
-    EX: 3 * 60 * 60,
-  });
+  await store.set(`cache-${collegeId}`, value);
   return true;
 }
 
