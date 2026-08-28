@@ -15,7 +15,7 @@ class Redis implements MemoryStore {
       console.error("Redis client error", error);
     });
 
-    this.client.on("connection", (stream) => {
+    this.client.on("connection", (_stream) => {
       console.log("a connection was made");
     });
   }
@@ -30,8 +30,9 @@ class Redis implements MemoryStore {
   }
 
   async set(key: string, value: string, options?: any): Promise<boolean> {
-    await this.client.set(key, value, options);
-    return true;
+    const result = await this.client.set(key, value, options);
+
+    return result === "OK";
   }
 
   async delete(key: string): Promise<boolean> {

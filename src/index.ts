@@ -2,12 +2,12 @@ import fastify from "fastify";
 import scrape from "./scrape";
 import { getCache, setCache } from "./cache";
 import redisStore from "./db/redis";
-import memoryStore from "./db/memory";
 import type { ClassesQuery, BuildHeader } from "./types/api";
 import fastifyCors from "@fastify/cors";
 import { env } from "./config/env";
-import { Lesson } from "./types/lesson";
 import formbody from "@fastify/formbody";
+import faculties from "./utils/faculties.util";
+import { buildCache } from "./buildCache";
 
 const server = fastify();
 
@@ -19,39 +19,76 @@ server.register(formbody);
 server.get<{ Querystring: ClassesQuery }>(
   "/classes",
   async (request, reply) => {
-    const collegeId = request.query.collegeId;
-    const gender = request.query.gender;
+    const collegeId = Number(request.query.collegeId);
 
-    if (!collegeId) {
+    const gender = Number(request.query.gender);
+
+    if (!Number.isFinite(collegeId)) {
       reply.status(400);
-      return { error: "collegeId is required", code: "bad_query" };
+
+      return {
+        error: "collegeId is required",
+        code: "bad_query",
+      };
     }
 
-    if (!gender) {
+    if (gender !== 1 && gender !== 2) {
       reply.status(400);
-      return { error: "gender is required", code: "bad_query" };
+
+      return {
+        error: "invalid gender",
+        code: "bad_query",
+      };
     }
 
-    if (gender == 0) {
-      return { error: "no reason", code: "god_knows" };
+    const facultySet = new Set<number>(faculties);
+
+    if (!facultySet.has(collegeId)) {
+      reply.status(400);
+
+      return {
+        error: "invalid collegeId",
+        code: "bad_query",
+      };
     }
 
-    const cache = await getCache(
-      redisStore,
-      gender == 1 ? `man-${collegeId}` : `woman-${collegeId}`,
-    );
+    const prefix = gender === 1 ? "man" : "woman";
 
+    const cacheKey = `${prefix}-${collegeId}`;
+
+    let cache = await getCache(redisStore, cacheKey);
+
+    // normal case
     if (cache) {
-      reply.header("content-type", "application/json");
-      return cache;
+      return JSON.parse(cache);
     }
 
-    reply.status(400);
-    return { error: "fetching data and building cache", code: "fetching_data" };
+    // no cache -> try building it
+    const result = await buildCache(gender);
 
-    // const tableData = await scrape();
+    // somebody else is already scraping
+    if (result === "busy") {
+      reply.status(202);
 
-    // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
+      return {
+        error: "cache is currently being built",
+        code: "fetching_data",
+      };
+    }
+
+    // build completed, try again
+    cache = await getCache(redisStore, cacheKey);
+
+    if (!cache) {
+      reply.status(500);
+
+      return {
+        error: "cache build failed",
+        code: "cache_error",
+      };
+    }
+
+    return JSON.parse(cache);
   },
 );
 
