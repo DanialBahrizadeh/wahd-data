@@ -8,6 +8,7 @@ import { join } from "path";
 import { waitForExcelDownload } from "./utils/excelDownloader.util";
 import { readBehestanExcel } from "./utils/readExcel.util";
 import { Lesson } from "./types/lesson";
+import faculties from "./utils/faculties.util";
 
 // TODO: shuold make the term and the collegeId as an argument so we could get the data of old terms too
 // row type
@@ -86,19 +87,30 @@ export default async function scrape(
       fields[1].click();
     });
 
-    await page.waitForNetworkIdle();
-
-    await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(12) a");
-
-    await page.$eval(".ui-menu:nth-child(11) li:nth-child(12) a", (el) =>
-      (el as HTMLElement).click(),
-    );
+    // await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(12) a");
 
     await page.waitForSelector(".ui-menu:nth-child(9) li:nth-child(1) a");
 
     await page.$eval(".ui-menu:nth-child(9) li:nth-child(1) a", (el) =>
       (el as HTMLElement).click(),
     );
+
+    for (
+      let facultyIndex = 0;
+      facultyIndex < faculties.length;
+      facultyIndex++
+    ) {
+      console.log(
+        `Selecting faculty ${faculties[facultyIndex]} at item ${facultyIndex + 1}`,
+      );
+      await page.waitForNetworkIdle();
+
+      const selector = `.ui-menu:nth-child(11) li:nth-child(${facultyIndex + 1}) a`;
+
+      await page.waitForSelector(selector);
+
+      await page.$eval(selector, (el) => (el as HTMLElement).click());
+    }
 
     await page.waitForSelector("#ShowReportExcel", {
       visible: true,
@@ -119,9 +131,7 @@ export default async function scrape(
         continue;
       }
 
-      if (!results[row.facultyId]) {
-        results[row.facultyId] = [];
-      }
+      results[row.facultyId] ??= [];
 
       results[row.facultyId].push(parseBehestanRow(row, term));
     }
