@@ -32,9 +32,13 @@ server.get<{ Querystring: ClassesQuery }>(
       return { error: "gender is required", code: "bad_query" };
     }
 
+    if (gender == 0) {
+      return { error: "no reason", code: "god_knows" };
+    }
+
     const cache = await getCache(
       redisStore,
-      gender == 0 ? `man-${collegeId}` : `woman-${collegeId}`,
+      gender == 1 ? `man-${collegeId}` : `woman-${collegeId}`,
     );
 
     if (cache) {
@@ -84,11 +88,11 @@ server.post<{ Headers: BuildHeader }>("/build", async (request, reply) => {
     await setCache(redisStore, "man-" + facultyId, JSON.stringify(lessons));
   }
 
-  data = await scrape(env.USERNAME_GIRL, env.PASSWORD_GIRL, [55, 42]);
-
-  for (const [facultyId, lessons] of Object.entries(data)) {
-    await setCache(redisStore, "woman-" + facultyId, JSON.stringify(lessons));
-  }
+  // data = await scrape(env.USERNAME_GIRL, env.PASSWORD_GIRL, [55, 42]);
+  //
+  // for (const [facultyId, lessons] of Object.entries(data)) {
+  //   await setCache(redisStore, "woman-" + facultyId, JSON.stringify(lessons));
+  // }
 
   return {
     message: "success",

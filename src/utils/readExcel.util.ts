@@ -1,55 +1,61 @@
-import ExcelJS from "exceljs";
+import * as XLSX from "xlsx";
+import { readFile } from "fs/promises";
+
 import type { BehestanRow } from "../types/behestan.type";
 
 export async function readBehestanExcel(path: string): Promise<BehestanRow[]> {
-  const workbook = new ExcelJS.Workbook();
+  const buffer = await readFile(path);
 
-  await workbook.xlsx.readFile(path);
+  const workbook = XLSX.read(buffer, {
+    type: "buffer",
+  });
 
-  const sheet = workbook.worksheets[0];
+  const sheetName = workbook.SheetNames[0];
 
-  if (!sheet) {
+  if (!sheetName) {
     throw new Error("No worksheet found");
   }
 
-  const result: BehestanRow[] = [];
+  const sheet = workbook.Sheets[sheetName];
 
-  sheet.eachRow((row, rowNumber) => {
-    // first row = headers
-    if (rowNumber === 1) {
-      return;
-    }
+  if (!sheet) {
+    throw new Error("Worksheet not found");
+  }
 
-    const value = (column: number) =>
-      String(row.getCell(column).value ?? "").trim();
-
-    result.push({
-      facultyId: value(1),
-      facultyName: value(2),
-
-      departmentId: value(3),
-      departmentName: value(4),
-
-      lessonId: value(5),
-      lessonName: value(6),
-
-      credits: value(7),
-      actionCredits: value(8),
-
-      capacity: value(9),
-      registered: value(10),
-      waitingList: value(11),
-
-      sex: value(12),
-      teacher: value(13),
-
-      scheduleAndExam: value(14),
-
-      description: value(15),
-      otherCenters: value(16),
-      emergencyDrop: value(17),
-    });
+  const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+    header: 1,
+    defval: "",
+    raw: false,
   });
 
-  return result;
+  return rows.slice(1).map((row) => {
+    const value = (column: number) => String(row[column] ?? "").trim();
+
+    return {
+      facultyId: value(0),
+      facultyName: value(1),
+
+      departmentId: value(2),
+      departmentName: value(3),
+
+      lessonId: value(4),
+      lessonName: value(5),
+
+      credits: value(6),
+      actionCredits: value(7),
+
+      capacity: value(8),
+      registered: value(9),
+      waitingList: value(10),
+
+      sex: value(11),
+      teacher: value(12),
+
+      scheduleAndExam: value(13),
+
+      description: value(14),
+      otherCenters: value(15),
+      emergencyDrop: value(16),
+    };
+  });
 }
