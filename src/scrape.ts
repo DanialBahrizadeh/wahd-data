@@ -88,7 +88,7 @@ export default async function scrape(
       const fields =
         document.querySelectorAll<HTMLInputElement>("input[orgid='BP2']");
 
-      fields[0].click();
+      fields[1].click();
     });
 
     await page.waitForNetworkIdle();
@@ -97,7 +97,7 @@ export default async function scrape(
       const fields =
         document.querySelectorAll<HTMLInputElement>("input[orgid='BP2']");
 
-      fields[1].click();
+      fields[0].click();
     });
 
     // await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(12) a");
