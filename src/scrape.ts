@@ -89,9 +89,21 @@ export default async function scrape(
 
     console.log("3 report page loaded");
 
-    await page.waitForFunction(() => {
-      return document.querySelectorAll("input[orgid='BP2']").length >= 2;
-    });
+    console.log("report url:", page.url());
+
+    console.log(
+      "BP2 count:",
+      await page.$$eval("input[orgid='BP2']", (els) => els.length),
+    );
+
+    console.log("waiting for BP2 inputs");
+
+    await page.waitForFunction(
+      () => document.querySelectorAll("input[orgid='BP2']").length >= 2,
+      { timeout: 60_000 },
+    );
+
+    console.log("BP2 inputs found");
 
     await page.evaluate(() => {
       const fields =
