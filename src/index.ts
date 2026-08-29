@@ -138,15 +138,24 @@ server.post<{ Headers: BuildHeader }>("/build", async (request, reply) => {
   // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
 });
 
-export default server;
+server.get("/", async () => {
+  return {
+    ok: true,
+    service: "wahd-data",
+  };
+});
 
-if (!process.env.VERCEL) {
-  server.listen({ port: 8080 }, (err, address) => {
+server.listen(
+  {
+    port: Number(process.env.PORT ?? 8080),
+    host: "0.0.0.0",
+  },
+  (err, address) => {
     if (err) {
       console.error(err);
       process.exit(1);
     }
 
     console.log(`Server listening at ${address}`);
-  });
-}
+  },
+);
