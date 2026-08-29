@@ -8,5 +8,6 @@ export const env = {
   USERNAME_GIRL: process.env.USERNAME_GIRL ?? "",
   PASSWORD_GIRL: process.env.PASSWORD_GIRL ?? "",
   REDIS_URL: process.env.REDIS_URL ?? "",
-  ADMIN_SECRET: process.env.ADMIN_SECRET ?? ""
+  ADMIN_SECRET: process.env.ADMIN_SECRET ?? "",
+  CHROME_EXECUTABLE_PATH: process.env.CHROME_EXECUTABLE_PATH ?? "",
 };

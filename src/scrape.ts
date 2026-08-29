@@ -1,4 +1,6 @@
 import puppeteer from "puppeteer";
+import puppeteerCore from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { env } from "./config/env";
 import { parseBehestanRow } from "./utils/parsers.util";
 
@@ -24,14 +26,25 @@ export default async function scrape(
 ) {
   const downloadDir = await mkdtemp(join(tmpdir(), "behestan-"));
 
-  const browser = await puppeteer.launch({
-    headless: env.DEBUG_MODE ? false : true,
+  const isVercel = Boolean(process.env.VERCEL);
 
-    downloadBehavior: {
-      policy: "allow",
-      downloadPath: downloadDir,
-    },
-  });
+  const browser = isVercel
+    ? await puppeteerCore.launch({
+        args: chromium.args,
+        executablePath: await chromium.executablePath(),
+        headless: true,
+        downloadBehavior: {
+          policy: "allow",
+          downloadPath: downloadDir,
+        },
+      })
+    : await puppeteer.launch({
+        headless: env.DEBUG_MODE ? false : true,
+        downloadBehavior: {
+          policy: "allow",
+          downloadPath: downloadDir,
+        },
+      });
 
   try {
     const page = await browser.newPage();

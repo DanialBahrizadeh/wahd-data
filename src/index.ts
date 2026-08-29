@@ -138,10 +138,15 @@ server.post<{ Headers: BuildHeader }>("/build", async (request, reply) => {
   // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
 });
 
-server.listen({ port: 8080 }, (err, address) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`Server listening at ${address}`);
-});
+export default server;
+
+if (!process.env.VERCEL) {
+  server.listen({ port: 8080 }, (err, address) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+    }
+
+    console.log(`Server listening at ${address}`);
+  });
+}
