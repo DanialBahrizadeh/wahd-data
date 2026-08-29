@@ -97,45 +97,47 @@ server.post<{ Headers: BuildHeader }>("/build", async (request, reply) => {
 
   if (!value) {
     reply.status(400);
-    return { error: "authorization header is required", code: "bad_headers" };
+
+    return {
+      error: "authorization header is required",
+      code: "bad_headers",
+    };
   }
 
   const [authType, authSecret] = value.split(" ");
 
-  if (authType != "Basic") {
+  if (authType !== "Basic") {
     reply.status(400);
+
     return {
       error: "only basic authorization is accepted",
       code: "bad_authorization_header",
     };
   }
 
-  if (authSecret != env.ADMIN_SECRET) {
+  if (authSecret !== env.ADMIN_SECRET) {
     reply.status(401);
+
     return {
       error: "not authorized to access this resource",
       code: "unauthorized",
     };
   }
 
-  let data = await scrape(env.USERNAME, env.PASSWORD);
+  const result = await buildCache(1);
 
-  // TODO multithread this code and use memorystore for job report
-  for (const [facultyId, lessons] of Object.entries(data)) {
-    await setCache(redisStore, "man-" + facultyId, JSON.stringify(lessons));
+  if (result === "busy") {
+    reply.status(409);
+
+    return {
+      error: "cache is already being built",
+      code: "build_in_progress",
+    };
   }
-
-  // data = await scrape(env.USERNAME_GIRL, env.PASSWORD_GIRL, [55, 42]);
-  //
-  // for (const [facultyId, lessons] of Object.entries(data)) {
-  //   await setCache(redisStore, "woman-" + facultyId, JSON.stringify(lessons));
-  // }
 
   return {
     message: "success",
   };
-
-  // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
 });
 
 server.get("/", async () => {
