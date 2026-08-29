@@ -62,6 +62,8 @@ export default async function scrape(
       waitUntil: "networkidle0",
     });
 
+    console.log("1 login page loaded");
+
     await page.waitForSelector(".external-link", {
       visible: true,
     });
@@ -75,13 +77,17 @@ export default async function scrape(
     await page.waitForNavigation({
       waitUntil: "networkidle0",
     });
-    //
+
+    console.log("2 logged in");
+
     await page.goto(
       "https://behestan.kntu.ac.ir/browser/fa/#/pages?fid=110&ftype=1",
       {
         waitUntil: "networkidle0",
       },
     );
+
+    console.log("3 report page loaded");
 
     await page.waitForFunction(() => {
       return document.querySelectorAll("input[orgid='BP2']").length >= 2;
@@ -128,15 +134,23 @@ export default async function scrape(
       await page.$eval(selector, (el) => (el as HTMLElement).click());
     }
 
+    console.log("4 faculties selected");
+
     await page.waitForSelector("#ShowReportExcel", {
       visible: true,
     });
 
     await page.click("#ShowReportExcel");
 
+    console.log("5 excel clicked");
+
     const file = await waitForExcelDownload(downloadDir);
 
+    console.log("6 excel downloaded", file);
+
     const rows = await readBehestanExcel(file);
+
+    console.log("7 excel parsed", rows.length);
 
     const results: Record<string, Lesson[]> = {};
 
@@ -151,6 +165,8 @@ export default async function scrape(
 
       results[row.facultyId].push(parseBehestanRow(row, term));
     }
+
+    console.log("8 scrape complete");
 
     return results;
   } finally {
