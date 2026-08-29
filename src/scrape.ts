@@ -54,6 +54,7 @@ export default async function scrape(
         "AppleWebKit/537.36 (KHTML, like Gecko) " +
         "Chrome/128.0.0.0 Safari/537.36",
     );
+    await formBody!.type("#GF078012_0", String(collegeId));
 
     await page.goto("https://behestan.kntu.ac.ir/browser/fa/#/auth/login", {
       waitUntil: "networkidle0",
