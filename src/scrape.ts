@@ -112,7 +112,9 @@ export default async function scrape(
       fields[1].click();
     });
 
-    await page.waitForNetworkIdle();
+    // await page.waitForNetworkIdle();
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     await page.evaluate(() => {
       const fields =
@@ -122,6 +124,8 @@ export default async function scrape(
     });
 
     // await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(12) a");
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     await page.waitForSelector(".ui-menu:nth-child(9) li:nth-child(1) a");
 
@@ -137,7 +141,9 @@ export default async function scrape(
       console.log(
         `Selecting faculty ${faculties[facultyIndex]} at item ${facultyIndex + 1}`,
       );
-      await page.waitForNetworkIdle();
+      // await page.waitForNetworkIdle();
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const selector = `.ui-menu:nth-child(11) li:nth-child(${facultyIndex + 1}) a`;
 
