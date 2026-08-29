@@ -1,6 +1,5 @@
 import fastify from "fastify";
-import scrape from "./scrape";
-import { getCache, setCache } from "./cache";
+import { getCache } from "./cache";
 import redisStore from "./db/redis";
 import type { ClassesQuery, BuildHeader } from "./types/api";
 import fastifyCors from "@fastify/cors";

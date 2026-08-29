@@ -27,6 +27,7 @@ export default async function scrape(
   const downloadDir = await mkdtemp(join(tmpdir(), "behestan-"));
 
   const isVercel = Boolean(process.env.VERCEL);
+  console.log("Launching browser:", isVercel ? "Vercel Chromium" : "local");
 
   const browser = isVercel
     ? await puppeteerCore.launch({
@@ -39,12 +40,14 @@ export default async function scrape(
         },
       })
     : await puppeteer.launch({
-        headless: env.DEBUG_MODE ? false : true,
+        headless: true,
         downloadBehavior: {
           policy: "allow",
           downloadPath: downloadDir,
         },
       });
+
+  console.log("Browser launched:", await browser.version());
 
   try {
     const page = await browser.newPage();
