@@ -40,7 +40,7 @@ export default async function scrape(
         },
       })
     : await puppeteer.launch({
-        headless: true,
+        headless: !env.DEBUG_MODE,
         downloadBehavior: {
           policy: "allow",
           downloadPath: downloadDir,
@@ -81,7 +81,7 @@ export default async function scrape(
     console.log("2 logged in");
 
     await page.goto(
-      "https://behestan.kntu.ac.ir/browser/fa/#/pages?fid=110&ftype=1",
+      "https://behestan.kntu.ac.ir/browser/fa/#/pages?fid=102&ftype=1",
       {
         waitUntil: "networkidle0",
       },
@@ -109,7 +109,7 @@ export default async function scrape(
       const fields =
         document.querySelectorAll<HTMLInputElement>("input[orgid='BP2']");
 
-      fields[1].click();
+      fields[5].click();
     });
 
     // await page.waitForNetworkIdle();
@@ -120,16 +120,16 @@ export default async function scrape(
       const fields =
         document.querySelectorAll<HTMLInputElement>("input[orgid='BP2']");
 
-      fields[0].click();
+      fields[3].click();
     });
 
     // await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(12) a");
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    await page.waitForSelector(".ui-menu:nth-child(9) li:nth-child(1) a");
+    await page.waitForSelector(".ui-menu:nth-child(11) li:nth-child(1) a");
 
-    await page.$eval(".ui-menu:nth-child(9) li:nth-child(1) a", (el) =>
+    await page.$eval(".ui-menu:nth-child(11) li:nth-child(1) a", (el) =>
       (el as HTMLElement).click(),
     );
 
@@ -145,7 +145,7 @@ export default async function scrape(
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const selector = `.ui-menu:nth-child(11) li:nth-child(${facultyIndex + 1}) a`;
+      const selector = `.ui-menu:nth-child(14) li:nth-child(${facultyIndex + 1}) a`;
 
       await page.waitForSelector(selector);
 
