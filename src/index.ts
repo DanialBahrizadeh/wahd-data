@@ -2,12 +2,12 @@ import fastify from "fastify";
 import scrape from "./scrape";
 import { getCache, setCache } from "./cache";
 import redisStore from "./db/redis";
-import memoryStore from "./db/memory";
 import type { ClassesQuery, BuildHeader } from "./types/api";
 import fastifyCors from "@fastify/cors";
-import {env} from "./config/env";
-import { Lesson } from "./types/lesson";
+import { env } from "./config/env";
 import formbody from "@fastify/formbody";
+import faculties from "./utils/faculties.util";
+import { buildCache } from "./buildCache";
 
 const server = fastify();
 
@@ -19,75 +19,134 @@ server.register(formbody);
 server.get<{ Querystring: ClassesQuery }>(
   "/classes",
   async (request, reply) => {
-    const collegeId = request.query.collegeId;
+    const collegeId = Number(request.query.collegeId);
 
-    if (!collegeId) {
+    const gender = Number(request.query.gender);
+
+    if (!Number.isFinite(collegeId)) {
       reply.status(400);
-      return { error: "collegeId is required", code: "bad_query"};
+
+      return {
+        error: "collegeId is required",
+        code: "bad_query",
+      };
     }
 
-    const cache = await getCache(memoryStore, collegeId);
+    if (gender !== 1 && gender !== 2) {
+      reply.status(400);
 
+      return {
+        error: "invalid gender",
+        code: "bad_query",
+      };
+    }
+
+    const facultySet = new Set<number>(faculties);
+
+    if (!facultySet.has(collegeId)) {
+      reply.status(400);
+
+      return {
+        error: "invalid collegeId",
+        code: "bad_query",
+      };
+    }
+
+    const prefix = gender === 1 ? "man" : "woman";
+
+    const cacheKey = `${prefix}-${collegeId}`;
+
+    let cache = await getCache(redisStore, cacheKey);
+
+    // normal case
     if (cache) {
-      reply.header("content-type", "application/json");
-      return cache;
+      return JSON.parse(cache);
     }
 
+    // no cache -> try building it
+    const result = await buildCache(gender);
+
+    // somebody else is already scraping
+    if (result === "busy") {
+      reply.status(202);
+
+      return {
+        error: "cache is currently being built",
+        code: "fetching_data",
+      };
+    }
+
+    // build completed, try again
+    cache = await getCache(redisStore, cacheKey);
+
+    if (!cache) {
+      reply.status(500);
+
+      return {
+        error: "cache build failed",
+        code: "cache_error",
+      };
+    }
+
+    return JSON.parse(cache);
+  },
+);
+
+server.post<{ Headers: BuildHeader }>("/build", async (request, reply) => {
+  const value = request.headers.authorization;
+
+  if (!value) {
     reply.status(400);
-    return {error: "fetching data and building cache", code: "fetching_data"};
-
-    // const tableData = await scrape();
-
-    // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
-
+    return { error: "authorization header is required", code: "bad_headers" };
   }
 
-);
+  const [authType, authSecret] = value.split(" ");
 
-server.post<{ Headers: BuildHeader}>(
-  "/build",
-  async (request, reply) => {
-    
-    const value = request.headers.authorization;
-
-    if(!value) {
-      reply.status(400);
-      return {error: "authorization header is required", code:"bad_headers"}
-    }
-
-    const [authType, authSecret] = value.split(" "); 
-
-    if(authType != "Basic") {
-      reply.status(400);
-      return {error: "only basic authorization is accepted", code: "bad_authorization_header"}
-    }
-
-    if(authSecret != env.ADMIN_SECRET) {
-      reply.status(401);
-      return {error: "not authorized to access this resource", code: "unauthorized"}
-    }
-
-    const data = await scrape();
-
-    // TODO multithread this code and use memorystore for job report
-    for(const [facultyId, lessons] of Object.entries(data)) {
-      await setCache(memoryStore, facultyId, JSON.stringify(lessons));
-    };
-
+  if (authType != "Basic") {
+    reply.status(400);
     return {
-      message: "success"
+      error: "only basic authorization is accepted",
+      code: "bad_authorization_header",
+    };
+  }
+
+  if (authSecret != env.ADMIN_SECRET) {
+    reply.status(401);
+    return {
+      error: "not authorized to access this resource",
+      code: "unauthorized",
+    };
+  }
+
+  let data = await scrape(env.USERNAME, env.PASSWORD);
+
+  // TODO multithread this code and use memorystore for job report
+  for (const [facultyId, lessons] of Object.entries(data)) {
+    await setCache(redisStore, "man-" + facultyId, JSON.stringify(lessons));
+  }
+
+  // data = await scrape(env.USERNAME_GIRL, env.PASSWORD_GIRL, [55, 42]);
+  //
+  // for (const [facultyId, lessons] of Object.entries(data)) {
+  //   await setCache(redisStore, "woman-" + facultyId, JSON.stringify(lessons));
+  // }
+
+  return {
+    message: "success",
+  };
+
+  // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
+});
+
+export default server;
+
+if (!process.env.VERCEL) {
+  server.listen({ port: 8080 }, (err, address) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
     }
 
-    // await setCache(memoryStore, collegeId, JSON.stringify(tableData));
-
-  }
-
-);
-
-server.listen({ port: 8080 }, (err, address) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`Server listening at ${address}`);
-});
+    console.log(`Server listening at ${address}`);
+  });
+}

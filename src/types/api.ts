@@ -1,2 +1,2 @@
-export type ClassesQuery = { collegeId: string };
+export type ClassesQuery = { collegeId: string, gender: number};
 export type BuildHeader = {'Authorization': string};
