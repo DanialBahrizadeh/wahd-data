@@ -68,10 +68,14 @@ const placeParser = (placeAndTime: string) => {
 // };
 
 function parseExam(value: string) {
+  if (!value) {
+    return 0;
+  }
+
   const text = normalizePersian(value);
 
   const match = text.match(
-    /امتحان\((\d{4})[./](\d{1,2})[./](\d{1,2})\)\s*ساعت\s*:\s*(\d{1,2}):(\d{2})/,
+    /(\d{4})[./](\d{1,2})[./](\d{1,2}).*?ساعت\s*:\s*(\d{1,2}):(\d{2})/,
   );
 
   if (!match) {
@@ -114,28 +118,44 @@ function parseSchedule(value: string) {
   const text = normalizePersian(value);
 
   const regex =
-    /درس\([^)]+\):\s*(.*?)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})(?:\s+مکان:\s*(.*?))?(?=\s+درس\([^)]+\):|\s+امتحان\(|$)/g;
+    /(?:درس|حل تمرین)\([^)]+\):\s*(.*?)\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})/g;
 
-  const schedules = [];
+  const matches = [...text.matchAll(regex)];
 
-  for (const match of text.matchAll(regex)) {
-    const [, dayText, start, end, place] = match;
+  return matches.map((match, index) => {
+    const [, dayText, start, end] = match;
 
-    const day = dayMap[dayText.replace(/\s+/g, "")] ?? dayMap[dayText];
+    const extraStart = (match.index ?? 0) + match[0].length;
 
-    schedules.push({
+    const extraEnd = matches[index + 1]?.index ?? text.length;
+
+    const extra = text.slice(extraStart, extraEnd);
+
+    const place =
+      extra
+        .match(/مکان:\s*(.*)/)?.[1]
+        ?.replace(/[،,\s]+$/g, "")
+        .trim() ?? "";
+
+    const dayKey = dayText.replace(/\s+/g, "");
+
+    const day = dayMap[dayKey] ?? dayMap[dayText.trim()];
+
+    return {
       day,
       start: timeToFloat(start),
       end: timeToFloat(end),
-      place: place?.trim() ?? "",
-    });
-  }
-
-  return schedules;
+      place,
+    };
+  });
 }
 
 export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
-  const schedule = parseSchedule(row.scheduleAndExam);
+  const schedule = parseSchedule(row.classTimeAndPlace);
+
+  const normalizedMoreInfo = normalizePersian(row.moreInfo);
+
+  const teacherFromInfo = normalizedMoreInfo.match(/استاد درس:\s*(.+)$/)?.[1];
 
   return {
     id: term + row.lessonId,
@@ -149,7 +169,7 @@ export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
     cap: row.capacity,
     signin: row.registered,
 
-    teacher: row.teacher,
+    teacher: teacherFromInfo?.trim() || row.teacher,
 
     classTime: schedule.map(({ day, start, end }) => ({
       day,
@@ -159,12 +179,12 @@ export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
 
     place: schedule.find((item) => item.place)?.place ?? "",
 
-    examDate: parseExam(row.scheduleAndExam),
+    examDate: parseExam(row.examDate),
 
-    // decide how you want these new Behestan fields
-    // represented in your final API
-    limits: row.description,
-    chosenSimister: "",
-    moreInfo: row.otherCenters,
+    limits: row.limits,
+
+    chosenSimister: row.chosenSimister,
+
+    moreInfo: row.moreInfo,
   };
 }

@@ -18,9 +18,15 @@ export type BehestanRow = {
   sex: string;
   teacher: string;
 
-  scheduleAndExam: string;
+  classTimeAndPlace: string;
+  examDate: string;
 
-  description: string;
-  otherCenters: string;
-  emergencyDrop: string;
+  limits: string;
+  chosenSimister: string;
+
+  forcedOrConflicting: string;
+  presentationMethod: string;
+  courseMode: string;
+
+  moreInfo: string;
 };

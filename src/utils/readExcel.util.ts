@@ -51,11 +51,17 @@ export async function readBehestanExcel(path: string): Promise<BehestanRow[]> {
       sex: value(11),
       teacher: value(12),
 
-      scheduleAndExam: value(13),
+      classTimeAndPlace: value(13),
+      examDate: value(14),
 
-      description: value(14),
-      otherCenters: value(15),
-      emergencyDrop: value(16),
+      limits: value(15),
+      chosenSimister: value(16),
+
+      forcedOrConflicting: value(17),
+      presentationMethod: value(18),
+      courseMode: value(19),
+
+      moreInfo: value(20),
     };
   });
 }

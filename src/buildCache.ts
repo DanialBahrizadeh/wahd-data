@@ -1,7 +1,12 @@
 import scrape from "./scrape";
 import redisStore from "./db/redis";
 import { env } from "./config/env";
-import { acquireBuildLock, releaseBuildLock, setCache } from "./cache";
+import {
+  acquireBuildLock,
+  releaseBuildLock,
+  setCache,
+  markCacheFresh,
+} from "./cache";
 import faculties from "./utils/faculties.util";
 
 export async function buildCache(gender: number): Promise<"built" | "busy"> {
@@ -29,6 +34,8 @@ export async function buildCache(gender: number): Promise<"built" | "busy"> {
         JSON.stringify(lessons),
       );
     }
+
+    await markCacheFresh(redisStore, gender);
 
     return "built";
   } finally {

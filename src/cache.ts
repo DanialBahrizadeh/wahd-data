@@ -1,3 +1,4 @@
+import { env } from "./config/env";
 import MemoryStore from "./types/store";
 
 export async function getCache(
@@ -12,11 +13,27 @@ export async function setCache(
   collegeId: string,
   value: string,
 ): Promise<boolean> {
-  await store.set(`cache-${collegeId}`, value, {
-    EX: 3 * 60 * 60,
+  return await store.set(`cache-${collegeId}`, value, {
+    EX: env.DATA_CACHE_TTL,
   });
+}
 
-  return true;
+export async function isCacheFresh(
+  store: MemoryStore,
+  gender: number,
+): Promise<boolean> {
+  const value = await store.get(`cache-fresh-${gender}`);
+
+  return value !== null;
+}
+
+export async function markCacheFresh(
+  store: MemoryStore,
+  gender: number,
+): Promise<void> {
+  await store.set(`cache-fresh-${gender}`, "1", {
+    EX: env.FRESH_CACHE_TTL,
+  });
 }
 
 export async function acquireBuildLock(

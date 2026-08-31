@@ -1,5 +1,5 @@
 import fastify from "fastify";
-import { getCache } from "./cache";
+import { getCache, isCacheFresh } from "./cache";
 import redisStore from "./db/redis";
 import type { ClassesQuery, BuildHeader } from "./types/api";
 import fastifyCors from "@fastify/cors";
@@ -57,16 +57,35 @@ server.get<{ Querystring: ClassesQuery }>(
 
     let cache = await getCache(redisStore, cacheKey);
 
-    // normal case
-    if (cache) {
+    const fresh = await isCacheFresh(redisStore, gender);
+
+    if (cache && fresh) {
       return JSON.parse(cache);
     }
 
-    // no cache -> try building it
-    const result = await buildCache(gender);
+    let result: "built" | "busy";
 
-    // somebody else is already scraping
+    try {
+      result = await buildCache(gender);
+    } catch (error) {
+      console.error("cache refresh failed:", error);
+
+      // Behestan failed, but we still
+      // have usable data from <24h ago
+      if (cache) {
+        return JSON.parse(cache);
+      }
+
+      throw error;
+    }
+
     if (result === "busy") {
+      // another request is refreshing it,
+      // return our existing data
+      if (cache) {
+        return JSON.parse(cache);
+      }
+
       reply.status(202);
 
       return {
@@ -75,7 +94,6 @@ server.get<{ Querystring: ClassesQuery }>(
       };
     }
 
-    // build completed, try again
     cache = await getCache(redisStore, cacheKey);
 
     if (!cache) {

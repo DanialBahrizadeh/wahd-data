@@ -10,4 +10,6 @@ export const env = {
   REDIS_URL: process.env.REDIS_URL ?? "",
   ADMIN_SECRET: process.env.ADMIN_SECRET ?? "",
   CHROME_EXECUTABLE_PATH: process.env.CHROME_EXECUTABLE_PATH ?? "",
+  DATA_CACHE_TTL: Number(process.env.DATA_CACHE_TTL) ?? 24 * 60 * 60,
+  FRESH_CACHE_TTL: Number(process.env.FRESH_CACHE_TTL) ?? 60 * 60,
 };
