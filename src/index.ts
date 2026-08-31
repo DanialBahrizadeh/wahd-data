@@ -5,7 +5,7 @@ import type { ClassesQuery, BuildHeader } from "./types/api";
 import fastifyCors from "@fastify/cors";
 import { env } from "./config/env";
 import formbody from "@fastify/formbody";
-import faculties from "./utils/faculties.util";
+import faculties, { getFacultyCacheId } from "./utils/faculties.util";
 import { buildCache } from "./buildCache";
 
 const server = fastify();
@@ -31,7 +31,7 @@ server.get<{ Querystring: ClassesQuery }>(
       };
     }
 
-    if (gender !== 1 && gender !== 2) {
+    if (gender !== 0 && gender !== 1) {
       reply.status(400);
 
       return {
@@ -51,9 +51,7 @@ server.get<{ Querystring: ClassesQuery }>(
       };
     }
 
-    const prefix = gender === 1 ? "man" : "woman";
-
-    const cacheKey = `${prefix}-${collegeId}`;
+    const cacheKey = getFacultyCacheId(collegeId, gender);
 
     let cache = await getCache(redisStore, cacheKey);
 
