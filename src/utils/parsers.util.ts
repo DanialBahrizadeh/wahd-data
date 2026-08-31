@@ -3,7 +3,20 @@ import type { Lesson, Schedule, UnParsedRow } from "../types/lesson";
 import { BehestanRow } from "../types/behestan.type";
 
 const normalizePersian = (value: string) =>
-  value.replaceAll("ي", "ی").replaceAll("ك", "ک").replace(/\s+/g, " ").trim();
+  value
+    .normalize("NFKC")
+    .replace(/[يى]/g, "ی")
+    .replaceAll("ك", "ک")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const toPersianDigits = (value: string) =>
+  value
+    .replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)])
+    .replace(/[٠-٩]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[digit.charCodeAt(0) - 0x0660]);
+
+export const normalizePersianText = (value: string) =>
+  toPersianDigits(normalizePersian(value));
 
 // map the the time to querters so they are easir to work with
 const timeToFloat = (time: string) => {
@@ -161,7 +174,7 @@ export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
     id: term + row.lessonId,
 
     lessonId: row.lessonId,
-    lessonName: row.lessonName,
+    lessonName: normalizePersianText(row.lessonName),
 
     credits: row.credits,
     actionCredits: row.actionCredits,
@@ -169,7 +182,7 @@ export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
     cap: row.capacity,
     signin: row.registered,
 
-    teacher: teacherFromInfo?.trim() || row.teacher,
+    teacher: normalizePersianText(teacherFromInfo?.trim() || row.teacher),
 
     classTime: schedule.map(({ day, start, end }) => ({
       day,
@@ -177,14 +190,16 @@ export function parseBehestanRow(row: BehestanRow, term: string): Lesson {
       end,
     })),
 
-    place: schedule.find((item) => item.place)?.place ?? "",
+    place: normalizePersianText(
+      schedule.find((item) => item.place)?.place ?? "",
+    ),
 
     examDate: parseExam(row.examDate),
 
-    limits: row.limits,
+    limits: normalizePersianText(row.limits),
 
-    chosenSimister: row.chosenSimister,
+    chosenSimister: normalizePersianText(row.chosenSimister),
 
-    moreInfo: row.moreInfo,
+    moreInfo: normalizePersianText(row.moreInfo),
   };
 }

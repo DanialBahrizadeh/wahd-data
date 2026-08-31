@@ -17,23 +17,16 @@ const faculties = [
   99, // materials
 ] as const;
 
-const facultyIndexMap: Record<number, number> = {
-  11: 2,
-  19: 3,
-  20: 4,
-  21: 5,
-  22: 6,
-  33: 7,
-  42: 8,
-  44: 9,
-  48: 10,
-  55: 11,
-  57: 12,
-  66: 13,
-  77: 14,
-  88: 15,
-  99: 16,
-};
+const genderSpecificFaculties = new Set<number>([42, 55]);
+
+export function getFacultyCacheId(facultyId: number, gender: number): string {
+  if (!genderSpecificFaculties.has(facultyId)) {
+    return String(facultyId);
+  }
+
+  const prefix = gender === 1 ? "man" : "woman";
+
+  return `${prefix}-${facultyId}`;
+}
 
 export default faculties;
-
