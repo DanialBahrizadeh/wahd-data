@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import formbody from "@fastify/formbody";
 import faculties, { getFacultyCacheId } from "./utils/faculties.util";
 import { buildCache } from "./buildCache";
+import { waitUntil } from "@vercel/functions";
 
 const server = fastify();
 
@@ -54,36 +55,52 @@ server.get<{ Querystring: ClassesQuery }>(
     const cacheKey = getFacultyCacheId(collegeId, gender);
 
     let cache = await getCache(redisStore, cacheKey);
-
     const fresh = await isCacheFresh(redisStore, gender);
 
-    if (cache && fresh) {
-      return JSON.parse(cache);
+    // We have usable data.
+    //
+    // If it is stale, refresh in the background,
+    // but DO NOT make this request wait for Behestan.
+    if (cache) {
+      if (!fresh) {
+        const refresh = buildCache(gender)
+          .then((result) => {
+            console.log(`Background cache refresh (${gender}):`, result);
+          })
+          .catch((error) => {
+            console.error(
+              `Background cache refresh failed (${gender}):`,
+              error,
+            );
+          });
+
+        if (process.env.VERCEL) {
+          waitUntil(refresh);
+        } else {
+          void refresh;
+        }
+      }
+
+      return JSON.parse(cache); // <-- important
     }
+
+    // ----------------------------
+    // TRUE CACHE MISS
+    // ----------------------------
+    //
+    // Nothing exists in Redis, therefore we actually
+    // have to wait for a build.
 
     let result: "built" | "busy";
 
     try {
       result = await buildCache(gender);
     } catch (error) {
-      console.error("cache refresh failed:", error);
-
-      // Behestan failed, but we still
-      // have usable data from <24h ago
-      if (cache) {
-        return JSON.parse(cache);
-      }
-
+      console.error("Initial cache build failed:", error);
       throw error;
     }
 
     if (result === "busy") {
-      // another request is refreshing it,
-      // return our existing data
-      if (cache) {
-        return JSON.parse(cache);
-      }
-
       reply.status(202);
 
       return {

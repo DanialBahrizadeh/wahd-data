@@ -1,6 +1,15 @@
-import persianDate from "persian-date";
-import type { Lesson, Schedule, UnParsedRow } from "../types/lesson";
+import type { Lesson, Schedule } from "../types/lesson";
 import { BehestanRow } from "../types/behestan.type";
+import { toGregorian } from "jalaali-js";
+
+const toEnglishDigits = (value: string) =>
+  value
+    .replace(/[۰-۹]/g, (digit) =>
+      String(digit.charCodeAt(0) - "۰".charCodeAt(0)),
+    )
+    .replace(/[٠-٩]/g, (digit) =>
+      String(digit.charCodeAt(0) - "٠".charCodeAt(0)),
+    );
 
 const normalizePersian = (value: string) =>
   value
@@ -47,29 +56,6 @@ const dayMap: Record<string, number> = {
   جمعه: 6,
 };
 
-const scheduleParser = (placeAndTime: string): Schedule[] => {
-  if (!placeAndTime) return [];
-  return placeAndTime
-    .replaceAll("درس(ت):", "")
-    .split("،") // schedules are seperated via persion comma
-    .map((schedule) => schedule.split("مکان:")[0]) // take the things before the place which are time
-    .map((schedule) => {
-      const parts = schedule.trim().split(" ");
-      const [start, end] = parts.at(-1)!.split("-").map(timeToFloat); // the last things is time like 13:30-15:00
-      const day = dayMap[parts.slice(0, -1).join("").trim()]; // everything before the last thing are the day and and other spaces
-
-      return { day, start, end };
-    });
-};
-
-const placeParser = (placeAndTime: string) => {
-  if (!placeAndTime) return "";
-  return placeAndTime
-    .replaceAll("درس(ت):", "")
-    .split("،")[0] // schedules are seperated via persion comma
-    .split("مکان:")[1];
-};
-
 // const sexParser = (sex: string): Sex => {
 //   const sexMap: any = {
 //     زن: 0,
@@ -85,7 +71,7 @@ function parseExam(value: string) {
     return 0;
   }
 
-  const text = normalizePersian(value);
+  const text = toEnglishDigits(normalizePersian(value));
 
   const match = text.match(
     /(\d{4})[./](\d{1,2})[./](\d{1,2}).*?ساعت\s*:\s*(\d{1,2}):(\d{2})/,
@@ -97,35 +83,16 @@ function parseExam(value: string) {
 
   const [, year, month, day, hour, minute] = match;
 
-  return new persianDate([
-    Number(year),
-    Number(month),
-    Number(day),
-    Number(hour),
-    Number(minute),
-  ]).valueOf();
+  const { gy, gm, gd } = toGregorian(Number(year), Number(month), Number(day));
+
+  // Behestan exam times are Tehran local time.
+  // Iran currently uses UTC+03:30 year-round.
+  const TEHRAN_OFFSET_MS = 3.5 * 60 * 60 * 1000;
+
+  return (
+    Date.UTC(gy, gm - 1, gd, Number(hour), Number(minute)) - TEHRAN_OFFSET_MS
+  );
 }
-
-const examDateParser = (examDate: string) => {
-  if (!examDate) return 0;
-  const [dates, hours] = examDate.split("ساعت:");
-  const [year, month, day] = dates
-    .replace("تاريخ:", "")
-    .trim()
-    .split("/")
-    .map(Number);
-  const [hour, minute] = hours.trim().split("-")[0].split(":").map(Number);
-
-  return new persianDate([year, month, day, hour, minute]).valueOf(); // save the date unix timestamps
-};
-
-export const parseRow = (unParsedRow: UnParsedRow): Lesson => ({
-  ...unParsedRow,
-  // sex: sexParser(unParsedRow["sex"]),
-  examDate: examDateParser(unParsedRow["examDate"]),
-  place: placeParser(unParsedRow["place"]),
-  classTime: scheduleParser(unParsedRow["classTime"]),
-});
 
 function parseSchedule(value: string) {
   const text = normalizePersian(value);
