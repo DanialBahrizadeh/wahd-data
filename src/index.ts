@@ -62,23 +62,26 @@ server.get<{ Querystring: ClassesQuery }>(
     // If it is stale, refresh in the background,
     // but DO NOT make this request wait for Behestan.
     if (cache) {
-      if (fresh) {
-        return JSON.parse(cache);
+      if (!fresh) {
+        const refresh = buildCache(gender)
+          .then((result) => {
+            console.log(`Background cache refresh (${gender}):`, result);
+          })
+          .catch((error) => {
+            console.error(
+              `Background cache refresh failed (${gender}):`,
+              error,
+            );
+          });
+
+        if (process.env.VERCEL) {
+          waitUntil(refresh);
+        } else {
+          void refresh;
+        }
       }
 
-      const refresh = buildCache(gender)
-        .then((result) => {
-          console.log(`Background cache refresh (${gender}):`, result);
-        })
-        .catch((error) => {
-          console.error(`Background cache refresh failed (${gender}):`, error);
-        });
-
-      if (process.env.VERCEL) {
-        waitUntil(refresh);
-      } else {
-        void refresh;
-      }
+      return JSON.parse(cache); // <-- important
     }
 
     // ----------------------------
