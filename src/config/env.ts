@@ -23,4 +23,5 @@ export const env = {
   CHROME_EXECUTABLE_PATH: process.env.CHROME_EXECUTABLE_PATH ?? "",
   DATA_CACHE_TTL: readNumber(process.env.DATA_CACHE_TTL, 7 * 24 * 60 * 60),
   FRESH_CACHE_TTL: readNumber(process.env.FRESH_CACHE_TTL, 60 * 60),
+  LOCK_SCRAPE: process.env.LOCK_SCRAPE === "true",
 };
