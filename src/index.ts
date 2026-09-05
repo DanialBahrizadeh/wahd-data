@@ -62,6 +62,9 @@ server.get<{ Querystring: ClassesQuery }>(
     // If it is stale, refresh in the background,
     // but DO NOT make this request wait for Behestan.
     if (cache) {
+      if (env.LOCK_SCRAPE) {
+        return JSON.parse(cache);
+      }
       if (!fresh) {
         const refresh = buildCache(gender)
           .then((result) => {
@@ -81,7 +84,7 @@ server.get<{ Querystring: ClassesQuery }>(
         }
       }
 
-      return JSON.parse(cache); // <-- important
+      return JSON.parse(cache);
     }
 
     // ----------------------------
@@ -94,6 +97,9 @@ server.get<{ Querystring: ClassesQuery }>(
     let result: "built" | "busy";
 
     try {
+      if (env.LOCK_SCRAPE) {
+        throw Error("Scrape is locked");
+      }
       result = await buildCache(gender);
     } catch (error) {
       console.error("Initial cache build failed:", error);
